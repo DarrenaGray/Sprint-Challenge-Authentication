@@ -18,10 +18,11 @@ function genToken(user) {
 		subject: user.id,
 		username: user.username
 	};
+	const secret = process.env.JWT_SECRET;
 	const options = {
 		expiresIn: '1hr'
 	};
-	return jwt.sign(payload, authenticate.jwtKey, options);
+	return jwt.sign(payload, secret, options);
 }
 
 function users(req, res) {
@@ -46,9 +47,9 @@ function register(req, res) {
 	let user = req.body;
 	const hash = bcrypt.hashSync(user.password, 10);
 	user.password = hash;
+	const token = genToken(user);
 	Users.add(user)
 		.then(regUser => {
-			// const token = genToken(user);
 			res.status(201).json({
 				regUser,
 				message: 'The user was registered successfully!',
@@ -67,7 +68,6 @@ function login(req, res) {
 	// implement user login
 	let { username, password } = req.body;
 	Users.findBy({ username })
-		.first()
 		.then(user => {
 			if (user && bcrypt.compareSync(password, user.password)) {
 				const token = genToken(user);
